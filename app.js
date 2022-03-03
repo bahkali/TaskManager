@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const routes = require("./src/route/tasks");
-const mongoose = require("mongoose");
+const connectDB = require("./src/db/connect");
 
 require("dotenv").config();
 
@@ -13,13 +13,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-//Database connection
-const dbUri = process.env.DB_URI;
-mongoose.Promise = global.Promise;
-mongoose
-  .connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then((result) => console.log());
-
 // ROUTES
 app.get("/", (req, res) => {
   res.send("Hello kaly");
@@ -27,7 +20,18 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/tasks", routes);
 
+// set port and connect to db
 const PORT = 3500 || process.env.PORT;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-});
+const dbUri = process.env.DB_URI;
+
+const start = async () => {
+  try {
+    await connectDB(dbUri);
+    app.listen(PORT, () => {
+      console.log(`App listening on port ${PORT} and database is connected`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+start();
